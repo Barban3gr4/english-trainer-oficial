@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Trainer Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle, #4b0082 0%, #1a0033 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* --- TELA DE LOGIN --- */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 50px 40px;
+            border-radius: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease;
+        }
+
+        .login-card h1 {
+            color: #ffd700;
+            font-size: 1.4rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .input-box { margin-bottom: 20px; }
+        .input-box input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 50px;
+            color: #fff;
+            outline: none;
+        }
+
+        .login-btn-circle {
+            width: 90px;
+            height: 90px;
+            border: 2px solid #ffd700;
+            background: transparent;
+            color: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .login-btn-circle:hover {
+            background: #ffd700;
+            color: #1a0033;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* --- TELA DO TRAINER --- */
+        #app-screen {
+            display: none; 
+            width: 100%;
+            max-width: 460px;
+            padding: 26px;
+            border-radius: 22px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            animation: fadeUp .5s ease;
+        }
+
+        h2 { text-align: center; margin-bottom: 15px; font-weight: 700; color: #333; }
+        .progress-wrapper { width: 100%; background: #e5e7eb; border-radius: 10px; height: 8px; margin-bottom: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #6c7cff, #9b6dff); transition: 0.4s; }
+        .progress-text { text-align: center; font-size: 13px; color: #6b7280; margin-bottom: 12px; }
+        .score { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 16px; font-weight: 600; }
+        .phrase-container { background: #f4f6ff; padding: 18px; border-radius: 16px; text-align: center; margin-bottom: 12px; }
+        .phrase { font-size: 18px; font-weight: 600; }
+        .translation-hint { margin-top: 8px; font-size: 15px; color: #6366f1; font-style: italic; min-height: 20px; }
+        .audio-container { text-align: center; margin-bottom: 14px; }
+        .audio-btn { background: #eef2ff; border: none; border-radius: 999px; padding: 8px 16px; font-weight: 600; cursor: pointer; color: #4f46e5; }
+        textarea { width: 100%; min-height: 90px; border-radius: 14px; border: 1px solid #e5e7eb; padding: 14px; font-size: 15px; resize: none; outline: none; }
+        
+        .buttons { display: grid; gap: 10px; margin-top: 14px; }
+        button { padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #6c7cff, #9b6dff); color: #fff; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        
+        /* ESTILO PARA BOTÃO DESATIVADO */
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .feedback { margin-top: 14px; padding: 14px; border-radius: 14px; font-weight: 600; display: none; }
+        .correct { background: #eaf7ea; color: #166534; border-left: 5px solid #22c55e; }
+        .wrong { background: #fdecea; color: #991b1b; border-left: 5px solid #ef4444; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <span style="font-size: 50px; display: block; margin-bottom: 10px;">🦁</span>
+            <h1>English Trainer</h1>
+            <div class="input-box"><input type="text" id="user" placeholder="Login"></div>
+            <div class="input-box"><input type="password" id="pass" placeholder="Senha"></div>
+            <button class="login-btn-circle" onclick="handleLogin()"><span>^</span>LOGIN</button>
+            <p id="error-msg" style="color: #ffbaba; margin-top: 15px; display: none; font-size: 14px;">Usuário ou senha incorretos!</p>
+        </div>
+    </div>
+
+    <div id="app-screen" class="container">
+        <h2>English Trainer</h2>
+        <div class="progress-wrapper"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-text" id="progressText"></div>
+        <div class="score">
+            <span>✅ Acertos: <span id="hits">0</span></span>
+            <span>❌ Erros: <span id="errors">0</span></span>
+        </div>
+        <div class="phrase-container">
+            <div class="phrase" id="englishPhrase"></div>
+            <div class="translation-hint" id="translationHint"></div>
+        </div>
+        <div class="audio-container"><button class="audio-btn" onclick="speakEnglish()">🔊 Ouvir</button></div>
+        <textarea id="userAnswer" placeholder="Digite sua tradução aqui..."></textarea>
+        <div class="buttons">
+            <button id="btnConfirm" class="btn-primary" onclick="checkAnswer()">Confirmar resposta</button>
+            <button class="btn-secondary" onclick="showAnswer()">Ver tradução</button>
+            <button class="btn-secondary" onclick="nextPhrase()">Próxima frase</button>
+            <button class="btn-secondary" onclick="resetTrainer()">🔄 Reiniciar treino</button>
+        </div>
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <script>
+        function handleLogin() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if (u === "adm" && p === "1234") {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'block';
+                shufflePhrases();
+                loadPhrase();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+
+        const phrases = [
+            {en:"Hello!", pt:"Olá!"},
+  {en:"How are you?", pt:"Como você está?"},
+  {en:"I'm fine, thanks.", pt:"Estou bem, obrigado."},
+  {en:"What's your name?", pt:"Qual é o seu nome?"},
+  {en:"My name is John.", pt:"Meu nome é John."},
+  {en:"Nice to meet you.", pt:"Prazer em te conhecer."},
+  {en:"Where are you from?", pt:"De onde você é?"},
+  {en:"I'm from Brazil.", pt:"Eu sou do Brasil."},
+  {en:"How old are you?", pt:"Quantos anos você tem?"},
+  {en:"I work as a developer.", pt:"Eu trabalho como desenvolvedor."},
+ 
+  {en:"I think so", pt:"Acho que sim"},
+  {en:"I’m not in the mood", pt:"Eu não estou no clima"},
+  {en:"It's fine with me", pt:"Por mim , tudo bem"},
+  {en:"What are you thinking?", pt:"Oque você está pensando?"},
+  {en:"I need to check my emails before starting a new task", pt:"Eu preciso checar meus e-mails antes de começar uma nova tarefa."},
+  {en:"You don't have to worry about that", pt:"Você não precisa se preocupar com isso"},
+  {en:"I don’t know", pt:"Eu não sei”"},
+  {en:"Why don't you just sit down and relax?", pt:"Por que você não se senta e relaxa?"},
+  {en:"Do you want some?", pt:"Você quer um pouco?"},
+  {en:"Could you explain this again, please?", pt:"Você poderia explicar isso novamente, por favor?"},
+ 
+  {en:"I understand", pt:"eu entendo"},
+  {en:"I’m not in the mood", pt:"Eu não estou no clima"},
+  {en:"What’s up?", pt:"E aí?"},
+  {en:"Did you come to work by car?", pt:"Você veio trabalhar de carro?"},
+  {en:"What is this", pt:"O que é isso?"},
+  {en:"I need to go", pt:"Eu preciso de ir"},
+  {en:"I don’t like it", pt:"Eu não gosto”"},
+  {en:"I’m just looking", pt:"Estou apenas olhando."},
+  {en:"Thanks you for your help", pt:"Obrigado pela sua ajuda."},
+  {en:"Can I ask you a question?", pt:"Posso te fazer uma pergunta"},
+
+  {en:"I'm sleepy", pt:"Eu estou com sono."},
+  {en:"I like it", pt:"Eu gosto"},
+  {en:"Please,have a seat", pt:"Por favor,se sente"},
+  {en:"Let’s do it", pt:"Vamos fazer isso"},
+  {en:"Come here", pt:"Venha aqui"},
+  {en:"Where's the bathroom", pt:"Onde é o banheiro"},
+  {en:"It’s up to you", pt:"Depende de você”"},
+  {en:"Have a nice day", pt:"Tenha um bom dia."},
+  {en:"Yes,please", pt:"Sim, por favor"},
+  {en:"No worries", pt:"Não se preocupe"},
+  
+  // Bloco 1
+  {en:"How are you?", pt:"Como você está?"},
+  {en:"I need help", pt:"Eu preciso de ajuda"},
+  {en:"Good morning", pt:"Bom dia"},
+  {en:"See you later", pt:"Até logo"},
+  {en:"What is your name?", pt:"Qual é o seu nome?"},
+  {en:"I don't understand", pt:"Eu não entendo"},
+  {en:"Wait a minute", pt:"Espere um minuto"},
+  {en:"Call me back", pt:"Me ligue de volta"},
+  {en:"I am lost", pt:"Eu estou perdido"},
+  {en:"Have a nice day", pt:"Tenha um bom dia"},
+
+  // Bloco 2
+  {en:"Where are you going?", pt:"Onde você vai?"},
+  {en:"I am hungry", pt:"Estou com fome"},
+  {en:"What time is it?", pt:"Que horas são?"},
+  {en:"It is raining", pt:"Está chovendo"},
+  {en:"I like this", pt:"Eu gosto disso"},
+  {en:"Can you help me?", pt:"Você pode me ajudar?"},
+  {en:"Follow me", pt:"Siga-me"},
+  {en:"Everything is fine", pt:"Está tudo bem"},
+  {en:"I am tired", pt:"Estou cansado"},
+  {en:"Let's go out", pt:"Vamos sair"},
+
+  // Bloco 3
+  {en:"Nice to meet you", pt:"Prazer em te conhecer"},
+  {en:"Excuse me", pt:"Com licença"},
+  {en:"How much is it?", pt:"Quanto custa isso?"},
+  {en:"I am busy", pt:"Estou ocupado"},
+  {en:"Take care", pt:"Se cuide"},
+  {en:"Are you sure?", pt:"Você tem certeza?"},
+  {en:"Don't worry", pt:"Não se preocupe"},
+  {en:"Tell me more", pt:"Me conte mais"},
+  {en:"Sit down, please", pt:"Sente-se, por favor"},
+  {en:"I believe in you", pt:"Eu acredito em você"},
+
+  // Bloco 4
+  {en:"What happened?", pt:"O que aconteceu?"},
+  {en:"I forgot", pt:"Eu esqueci"},
+  {en:"Good luck", pt:"Boa sorte"},
+  {en:"Stop here", pt:"Pare aqui"},
+  {en:"I am ready", pt:"Estou pronto"},
+  {en:"Come here", pt:"Venha aqui"},
+  {en:"It's too late", pt:"É tarde demais"},
+  {en:"I'm coming", pt:"Estou chegando"},
+  {en:"Think about it", pt:"Pense sobre isso"},
+  {en:"Welcome home", pt:"Bem-vindo a casa"},
+
+  {en:"I love this place", pt:"Eu amo este lugar."},
+  {en:"can you help me", pt:"Você pode me ajudar?"},
+  {en:"This is my friend", pt:"Este é meu amigo"},
+  {en:"Please close the door", pt:"Por favor feche a porta"},
+  {en:"Where is the hotel", pt:"Onde fica o hotel?"},
+  {en:"She is very nice", pt:"Ela é muito legal."},
+  {en:"Look at the sky", pt:"Olhe para o céu"},
+  {en:"Do you speak english?", pt:"Você fala inglês"},
+  {en:"Yes,please", pt:"Sim, por favor"},
+  {en:"No worries", pt:"Não se preocupe"},  
+  
+  // Bloco 5
+  {en:"I agree with you", pt:"Eu concordo com você"},
+  {en:"Keep going", pt:"Continue indo"},
+  {en:"That is true", pt:"Isso é verdade"},
+  {en:"Wait for me", pt:"Espere por mim"},
+  {en:"I feel better", pt:"Eu me sinto melhor"},
+  {en:"Look at this", pt:"Olhe para isso"},
+  {en:"It's very cold", pt:"Está muito frio"},
+  {en:"Can I come in?", pt:"Posso entrar?"},
+  {en:"Just a moment", pt:"Só um momento"},
+  {en:"I'll be there", pt:"Eu estarei lá"},
+
+  // Bloco 6
+  {en:"It's my fault", pt:"A culpa é minha"},
+  {en:"Never mind", pt:"Deixa para lá"},
+  {en:"Sounds good", pt:"Parece bom"},
+  {en:"Are you ready?", pt:"Você está pronto?"},
+  {en:"I don't know", pt:"Eu não sei"},
+  {en:"Trust me", pt:"Confie em mim"},
+  {en:"What do you think?", pt:"O que você acha?"},
+  {en:"I'm on my way", pt:"Estou a caminho"},
+  {en:"Make a wish", pt:"Faça um pedido"},
+  {en:"Time flies", pt:"O tempo voa"},
+
+  // Bloco 7
+  {en:"Be careful", pt:"Tenha cuidado"},
+  {en:"I'm so proud of you", pt:"Estou tão orgulhoso de você"},
+  {en:"Is it possible?", pt:"É possível?"},
+  {en:"Let me see", pt:"Deixe-me ver"},
+  {en:"It's up to you", pt:"Você quem decide"},
+  {en:"No problem", pt:"Sem problemas"},
+  {en:"See you tomorrow", pt:"Até amanhã"},
+  {en:"That's enough", pt:"Já basta"},
+  {en:"I need to go", pt:"Eu preciso ir"},
+  {en:"Long time no see", pt:"Quanto tempo que não nos vemos"},
+   
+  {en:"It's a beautiful day", pt:"Está um dia lindo"},
+  {en:"How much?", pt:"Quanto custa?"},
+  {en:"Take your time", pt:"Não se apresse"},
+  {en:"It doesn’t matter", pt:"Não importa"},
+  {en:"No way", pt:"De jeito nenhum"},
+  {en:"I’m on my way", pt:"Estou a caminho"},
+  {en:"Give me a sec", pt:"Me dê um segundo"},
+  {en:"I’m starving", pt:"Estou faminto"},
+  {en:"Can you help me?", pt:"Você pode me ajudar?"},
+  {en:"I’m just kidding", pt:"Estou só brincando"}, 
+  
+  // Bloco 5
+  {en:"I agree with you", pt:"Eu concordo com você"},
+  {en:"Keep going", pt:"Continue indo"},
+  {en:"That is true", pt:"Isso é verdade"},
+  {en:"Wait for me", pt:"Espere por mim"},
+  {en:"I feel better", pt:"Eu me sinto melhor"},
+  {en:"Look at this", pt:"Olhe para isso"},
+  {en:"It's very cold", pt:"Está muito frio"},
+  {en:"Can I come in?", pt:"Posso entrar?"},
+  {en:"Just a moment", pt:"Só um momento"},
+  {en:"I'll be there", pt:"Eu estarei lá"},
+
+  // Bloco 6
+  {en:"It's my fault", pt:"A culpa é minha"},
+  {en:"Never mind", pt:"Deixa para lá"},
+  {en:"Sounds good", pt:"Parece bom"},
+  {en:"Are you ready?", pt:"Você está pronto?"},
+  {en:"I don't know", pt:"Eu não sei"},
+  {en:"Trust me", pt:"Confie em mim"},
+  {en:"What do you think?", pt:"O que você acha?"},
+  {en:"I'm on my way", pt:"Estou a caminho"},
+  {en:"Make a wish", pt:"Faça um pedido"},
+  {en:"Time flies", pt:"O tempo voa"},
+
+  // Bloco 7
+  {en:"Be careful", pt:"Tenha cuidado"},
+  {en:"I'm so proud of you", pt:"Estou tão orgulhoso de você"},
+  {en:"Is it possible?", pt:"É possível?"},
+  {en:"Let me see", pt:"Deixe-me ver"},
+  {en:"It's up to you", pt:"Você quem decide"},
+  {en:"No problem", pt:"Sem problemas"},
+  {en:"See you tomorrow", pt:"Até amanhã"},
+  {en:"That's enough", pt:"Já basta"},
+  {en:"I need to go", pt:"Eu preciso ir"},
+  {en:"Long time no see", pt:"Quanto tempo que não nos vemos"},
+  
+  {en:"What time is it?", pt:"Que horas são?"},
+  {en:"I'm hungry.", pt:"Estou com fome."},
+  {en:"I'm thirsty.", pt:"Estou com sede."},
+  {en:"I'm tired.", pt:"Estou cansado."},
+  {en:"I agree.", pt:"Eu concordo."},
+  {en:"I disagree.", pt:"Eu discordo."},
+  {en:"That makes sense.", pt:"Isso faz sentido."},
+  {en:"Sounds good.", pt:"Parece bom."},
+  {en:"Of course.", pt:"Claro."},
+  {en:"No problem.", pt:"Sem problema."},
+
+  {en:"Can you help me?", pt:"Você pode me ajudar?"},
+  {en:"How much is this?", pt:"Quanto custa isso?"},
+  {en:"I don't understand.", pt:"Eu não entendo."},
+  {en:"Can you repeat?", pt:"Você pode repetir?"},
+  {en:"Speak slowly, please.", pt:"Fale devagar, por favor."},
+  {en:"What do you mean?", pt:"O que você quer dizer?"},
+  {en:"I'm learning English.", pt:"Estou aprendendo inglês."},
+  {en:"I like it.", pt:"Eu gosto disso."},
+  {en:"I don't like it.", pt:"Eu não gosto disso."},
+  {en:"That's interesting.", pt:"Isso é interessante."},
+
+  {en:"I'm busy right now.", pt:"Estou ocupado agora."},
+  {en:"Let's go.", pt:"Vamos lá."},
+  {en:"See you later.", pt:"Até mais."},
+  {en:"Take care.", pt:"Se cuida."},
+  {en:"Good luck!", pt:"Boa sorte!"},
+  {en:"Welcome!", pt:"Bem-vindo!"},
+  {en:"Congratulations!", pt:"Parabéns!"},
+  {en:"What's going on?", pt:"O que está acontecendo?"},
+  {en:"What's up?", pt:"E aí?"},
+  {en:"It depends.", pt:"Depende."}
+        ];
+
+        let index = 0, hits = 0, errors = 0, answered = false, shuffled = [];
+
+        function normalize(text) {
+            return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/g, "").trim();
+        }
+
+        function shufflePhrases() { shuffled = [...phrases].sort(() => Math.random() - 0.5); }
+
+        function loadPhrase() {
+            answered = false;
+            // Reabilita o botão para a nova frase
+            document.getElementById("btnConfirm").disabled = false;
+            document.getElementById("englishPhrase").innerText = shuffled[index].en;
+            document.getElementById("translationHint").innerText = ""; 
+            document.getElementById("userAnswer").value = "";
+            document.getElementById("feedback").style.display = "none";
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const percent = ((index + 1) / shuffled.length) * 100;
+            document.getElementById("progressBar").style.width = percent + "%";
+            document.getElementById("progressText").innerText = `Frase ${index + 1} de ${shuffled.length}`;
+        }
+
+        function checkAnswer() {
+            if (answered) return;
+            const user = normalize(document.getElementById("userAnswer").value);
+            const correct = normalize(shuffled[index].pt);
+            const feedback = document.getElementById("feedback");
+            
+            if (!user) return alert("Digite algo!");
+
+            if (user === correct) {
+                hits++; feedback.className = "feedback correct"; feedback.innerText = "✅ Resposta correta!";
+            } else {
+                errors++; feedback.className = "feedback wrong"; feedback.innerText = "❌ Incorreta. Era: " + shuffled[index].pt;
+            }
+            
+            answered = true;
+            // DESABILITA O BOTÃO APÓS A RESPOSTA
+            document.getElementById("btnConfirm").disabled = true;
+            
+            document.getElementById("hits").innerText = hits;
+            document.getElementById("errors").innerText = errors;
+            feedback.style.display = "block";
+        }
+
+        function nextPhrase() {
+            index++;
+            if (index < shuffled.length) loadPhrase();
+            else { alert("🎉 Fim do treino!"); resetTrainer(); }
+        }
+
+        function resetTrainer() {
+            index = 0; hits = 0; errors = 0;
+            document.getElementById("hits").innerText = 0;
+            document.getElementById("errors").innerText = 0;
+            shufflePhrases();
+            loadPhrase();
+        }
+
+        function showAnswer() { document.getElementById("translationHint").innerText = shuffled[index].pt; }
+
+        function speakEnglish() {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(shuffled[index].en);
+            utterance.lang = "en-US";
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
